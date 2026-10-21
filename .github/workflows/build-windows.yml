@@ -1,0 +1,45 @@
+name: Build Ship Cont CAD CV 2.6 for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'app.py'
+      - 'app.ico'
+      - 'app_logo.png'
+      - 'requirements.txt'
+      - 'EDI_Input_Template.xlsx'
+      - 'Vessel_Skeleton_Template.xlsx'
+      - 'CHANGELOG_V2.6.md'
+      - '.github/workflows/build-windows.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Get source code
+        uses: actions/checkout@v4
+
+      - name: Set up Python on the temporary build machine only
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Build standalone Windows EXE
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name Ship_Cont_CAD_CV_v2.6 --icon app.ico --add-data "app_logo.png;." --add-data "EDI_Input_Template.xlsx;." --add-data "Vessel_Skeleton_Template.xlsx;." --collect-all PIL app.py
+
+      - name: Upload standalone EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ship_Cont_CAD_CV_v2.6_Windows_EXE
+          path: dist/Ship_Cont_CAD_CV_v2.6.exe
+          if-no-files-found: error
+          retention-days: 14
